@@ -8,61 +8,92 @@
 // BitInputStream has the following public methods:
 //     public BitInputStream(String file)
 //         opens an input stream with the given file name
-//     public int readBit()
-//         reads the next bit from input (-1 if at end of file)
+//     public int nextBit()
+//         reads the next bit from input (throws -1 if at end of file)
+//     public boolean hasNextBit()
+//         returns true if there's another bit in the input stream to be read
 //     public void close()
 //         closes the input
 
 import java.io.*;
+import java.util.*;
 
 public class BitInputStream {
     private FileInputStream input;
-    private int digits;     // next set of digits (buffer)
-    private int numDigits;  // how many digits from buffer have been used
+    private int currentByte;     // current set of bits (buffer)
+    private int nextByte;        // next set of bits (buffer)
+    private int numBits;         // how many bits from buffer have been used
+    private int remainingAtEnd;  // how many bits will be remaining at the end
+    // after we're done
 
-    private static final int BYTE_SIZE = 8;  // digits per byte
+    private static final int BYTE_SIZE = 8;  // bits per byte
 
     // pre : given file name is legal
     // post: creates a BitInputStream reading input from the file
     public BitInputStream(String file) {
         try {
-            input = new FileInputStream(file);
-        } catch (IOException e) {
-            throw new RuntimeException(e.toString());
+            this.input = new FileInputStream(file);
+
+            // Read in the number of remaining bits at the end
+            this.remainingAtEnd = this.input.read();
+
+            // Set up the nextByte field.
+            this.nextByte = this.input.read();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex.toString());
         }
-        nextByte();
+
+        this.nextByte();
+    }
+
+    public boolean hasNextBit() {
+        boolean atEnd = this.currentByte == -1;
+        boolean onlyRemaining = this.nextByte == -1
+                && BYTE_SIZE - this.numBits == this.remainingAtEnd;
+        return !atEnd && !onlyRemaining;
     }
 
     // post: reads next bit from input (-1 if at end of file)
-    public int readBit() {
-        // if at eof, return -1
-        if (digits == -1)
-            return -1;
-        int result = digits % 2;
-        digits /= 2;
-        numDigits++;
-        if (numDigits == BYTE_SIZE)
-            nextByte();
+    //       throws NoSuchElementException if there is no bit to return
+    public int nextBit() {
+        // if at eof, throw exception
+        if (!this.hasNextBit()) {
+            throw new NoSuchElementException();
+        }
+        int result = this.currentByte % 2;
+        this.currentByte /= 2;
+        this.numBits++;
+        if (this.numBits == BYTE_SIZE) {
+            this.nextByte();
+        }
         return result;
     }
 
     // post: refreshes the internal buffer with the next BYTE_SIZE bits
     private void nextByte() {
-        try {
-            digits = input.read();
-        } catch (IOException e) {
-            throw new RuntimeException(e.toString());
+        this.currentByte = this.nextByte;
+        if (this.currentByte != -1) {
+            try {
+                this.nextByte = this.input.read();
+            } catch (IOException e) {
+                throw new RuntimeException(e.toString());
+            }
         }
-        numDigits = 0;
+
+        this.numBits = 0;
     }
 
     // post: input is closed
     public void close() {
         try {
-            input.close();
+            this.input.close();
         } catch (IOException e) {
             throw new RuntimeException(e.toString());
         }
     }
 
+    // included to ensure that the stream is closed
+    protected void finalize() {
+        this.close();
+    }
 }
