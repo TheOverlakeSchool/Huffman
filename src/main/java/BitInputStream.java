@@ -46,6 +46,22 @@ public class BitInputStream {
         this.nextByte();
     }
 
+    public BitInputStream(File compressedFile) {
+        try {
+            this.input = new FileInputStream(compressedFile);
+
+            // Read in the number of remaining bits at the end
+            this.remainingAtEnd = this.input.read();
+
+            // Set up the nextByte field.
+            this.nextByte = this.input.read();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex.toString());
+        }
+
+        this.nextByte();
+    }
+
     public boolean hasNextBit() {
         boolean atEnd = this.currentByte == -1;
         boolean onlyRemaining = this.nextByte == -1
