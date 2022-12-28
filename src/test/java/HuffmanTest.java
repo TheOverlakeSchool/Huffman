@@ -25,7 +25,7 @@ class HuffmanTest {
         PrintStream outputStream = outputStream();
         huffmanCode.save(outputStream);
 
-        String[] actual = baos.toString().split("\n\r?");
+        String[] actual = baos.toString().split("\r?\n");
         Scanner expected = expectedFileContents(filename + ".code");
         for (String line : actual) {
             assertEquals(expected.nextLine(), line);

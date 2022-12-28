@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "save",
+      "setup": "",
+      "run": "gradle test --tests HuffmanTest.testSave",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 5
+    },
+    {
+      "name": "translate",
+      "setup": "",
+      "run": "gradle test --tests HuffmanTest.testTranslate",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 5
+    }
+  ]
+}
